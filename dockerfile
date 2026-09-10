@@ -1,37 +1,39 @@
-FROM ubuntu:latest
-MAINTAINER G3org <info@test.com>
+# ------------------------------------------------------------
+# Stage 1: Build PJSIP + Python bindings + sip2mqtt
+# ------------------------------------------------------------
+FROM ubuntu:22.04 AS build
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PJSIP_VERSION=2.7.2
+ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-            build-essential \
-            ca-certificates \
-            curl \
-            nano \
-            mc \
-            libgsm1-dev \
-            libspeex-dev \
-            libspeexdsp-dev \
-            libsrtp0-dev \
-            libssl-dev \
-            portaudio19-dev \
-	    python \
-	    python-dev \
-            python-pip \
-            python-virtualenv \
-	    python3-setuptools \
-            python-setuptools \
-            && \
-    apt-get purge -y --auto-remove && rm -rf /var/lib/apt/lists/*
-RUN pip install paho-mqtt
+        build-essential \
+        ca-certificates \
+        curl \
+        nano \
+        mc \
+        libgsm1-dev \
+        libspeex-dev \
+        libspeexdsp-dev \
+        libsrtp2-dev \
+        libssl-dev \
+        portaudio19-dev \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-venv \
+        python3-setuptools && \
+    rm -rf /var/lib/apt/lists/*
 
+RUN pip3 install paho-mqtt
+
+# Download config_site.h
 RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_site.h -o /tmp/config_site.h
-#COPY config_site.h /tmp/
-ENV PJSIP_VERSION=2.7.2
-ENV  CFLAGS="-O2 -DNDEBUG"
-ENV  CFLAGS="$CFLAGS -fPIC"
-RUN mkdir /usr/src/pjsip && \
 
+# Build PJSIP
+RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -vsL http://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.bz2 | \
          tar --strip-components 1 -xj && \
@@ -45,31 +47,62 @@ RUN mkdir /usr/src/pjsip && \
                 --with-external-pa \
                 --with-external-speex \
                 --with-external-srtp \
-                --prefix=/usr \
-                && \
-    make all install && \
-    /sbin/ldconfig && \
-#    rm -rf /usr/src/pjsip
+                --prefix=/usr && \
+    make -j$(nproc) all install && \
+    ldconfig && \
     cd /usr/src/pjsip/pjsip-apps/src/python && \
-    python setup.py build && python setup.py install
+    python3 setup.py build && python3 setup.py install
 
-RUN mkdir /opt/sip2mqtt/
-RUN curl -L https://raw.githubusercontent.com/lendy007/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
+# Download sip2mqtt
+RUN mkdir -p /opt/sip2mqtt && \
+    curl -L https://raw.githubusercontent.com/lendy007/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
 
-RUN cd /usr/src/pjsip/pjsip-apps/src/python && \
-    python setup.py build && python setup.py install
+# ------------------------------------------------------------
+# Stage 2: Runtime image
+# ------------------------------------------------------------
+FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 
-ENV MQTT_TOPIC sip2mqtt/softphone
-ENV MQTT_DOMAIN 192.168.5.2
-ENV MQTT_PORT 1830
-ENV MQTT_USERNAME user
-ENV MQTT_PASSWORD password
-ENV SIP_DOMAIN sipgate.de
-ENV SIP_USERNAME sipuser
-ENV SIP_PASSWORD sippassword
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        libgsm1 \
+        libspeex1 \
+        libspeexdsp1 \
+        libsrtp2-1 \
+        libssl3 \
+        portaudio19-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-CMD /bin/sh -c "python /opt/sip2mqtt/sip2mqtt.py --mqtt_topic $MQTT_TOPIC --mqtt_domain $MQTT_DOMAIN --mqtt_port $MQTT_PORT --mqtt_username $MQTT_USERNAME --mqtt_password $MQTT_PASSWORD --sip_domain $SIP_DOMAIN --sip_username $SIP_USERNAME --sip_password $SIP_PASSWORD"
-#CMD /bin/sh -c "python /opt/sip2mqtt/sip2mqtt.py --mqtt_topic $MQTT_TOPIC --mqtt_domain $MQTT_DOMAIN --m$
-#CMD ["python", "/opt/sip2mqtt/sip2mqtt.py", ""]
+# Copy PJSIP runtime libs
+COPY --from=build /usr/lib /usr/lib
+COPY --from=build /usr/local /usr/local
+COPY --from=build /usr/src/pjsip/pjsip-apps/src/python /usr/src/pjsip/pjsip-apps/src/python
 
+# Copy sip2mqtt
+COPY --from=build /opt/sip2mqtt /opt/sip2mqtt
+
+WORKDIR /opt/sip2mqtt
+
+# Environment variables (configurable in Portainer)
+ENV MQTT_TOPIC=sip2mqtt/softphone
+ENV MQTT_DOMAIN=192.168.5.2
+ENV MQTT_PORT=1830
+ENV MQTT_USERNAME=user
+ENV MQTT_PASSWORD=password
+ENV SIP_DOMAIN=sipgate.de
+ENV SIP_USERNAME=sipuser
+ENV SIP_PASSWORD=sippassword
+
+# Use ENV variables in CMD (this is what you wanted)
+CMD python3 /opt/sip2mqtt/sip2mqtt.py \
+    --mqtt_topic "$MQTT_TOPIC" \
+    --mqtt_domain "$MQTT_DOMAIN" \
+    --mqtt_port "$MQTT_PORT" \
+    --mqtt_username "$MQTT_USERNAME" \
+    --mqtt_password "$MQTT_PASSWORD" \
+    --sip_domain "$SIP_DOMAIN" \
+    --sip_username "$SIP_USERNAME" \
+    --sip_password "$SIP_PASSWORD"
