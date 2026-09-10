@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# Stage 1: Build PJSIP + sip2mqtt
+# Stage 1: Build PJSIP
 # ------------------------------------------------------------
 FROM ubuntu:22.04 AS build
 
@@ -17,17 +17,13 @@ RUN apt-get update -qq && \
         libspeexdsp-dev \
         libsrtp2-dev \
         libssl-dev \
-        portaudio19-dev \
-        python3 \
-        python3-pip && \
+        portaudio19-dev && \
     rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install paho-mqtt
 
 # Download config_site.h
 RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_site.h -o /tmp/config_site.h
 
-# Build PJSIP (bez Python bindingov)
+# Build PJSIP (using GitHub mirror)
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
@@ -46,16 +42,11 @@ RUN mkdir /usr/src/pjsip && \
     make -j$(nproc) all install && \
     ldconfig
 
-# Copy sip2mqtt
-WORKDIR /app
-COPY . /app
-
 # ------------------------------------------------------------
-# Stage 2: Runtime
+# Stage 2: Runtime + sip2mqtt
 # ------------------------------------------------------------
 FROM ubuntu:22.04
 
-# Runtime ENV variables
 ENV MQTT_TOPIC=""
 ENV MQTT_DOMAIN=""
 ENV MQTT_PORT=""
@@ -79,6 +70,7 @@ RUN apt-get update -qq && \
 
 RUN pip3 install paho-mqtt
 
+# Copy PJSIP libs from build stage
 COPY --from=build /usr/lib/libpj* /usr/lib/
 COPY --from=build /usr/lib/libpjsua* /usr/lib/
 COPY --from=build /usr/lib/libpjsip* /usr/lib/
@@ -86,15 +78,18 @@ COPY --from=build /usr/lib/libpjmedia* /usr/lib/
 COPY --from=build /usr/lib/libpjlib* /usr/lib/
 COPY --from=build /usr/bin/pjsua* /usr/bin/
 
-COPY --from=build /app /app
-WORKDIR /app
+# Download sip2mqtt.py exactly like your original Dockerfile
+RUN mkdir -p /opt/sip2mqtt
+RUN curl -L https://raw.githubusercontent.com/lendy007/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
 
-CMD python3 /app/sip2mqtt.py \
-    --mqtt_topic "$MQTT_TOPIC" \
-    --mqtt_domain "$MQTT_DOMAIN" \
-    --mqtt_port "$MQTT_PORT" \
-    --mqtt_username "$MQTT_USERNAME" \
-    --mqtt_password "$MQTT_PASSWORD" \
-    --sip_domain "$SIP_DOMAIN" \
-    --sip_username "$SIP_USERNAME" \
-    --sip_password "$SIP_PASSWORD"
+WORKDIR /opt/sip2mqtt
+
+CMD /bin/sh -c "python3 /opt/sip2mqtt/sip2mqtt.py \
+    --mqtt_topic $MQTT_TOPIC \
+    --mqtt_domain $MQTT_DOMAIN \
+    --mqtt_port $MQTT_PORT \
+    --mqtt_username $MQTT_USERNAME \
+    --mqtt_password $MQTT_PASSWORD \
+    --sip_domain $SIP_DOMAIN \
+    --sip_username $SIP_USERNAME \
+    --sip_password $SIP_PASSWORD"
