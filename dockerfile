@@ -17,8 +17,7 @@ RUN apt-get update -qq && \
         libspeexdsp-dev \
         libsrtp2-dev \
         libssl-dev \
-        portaudio19-dev \
-        curl && \
+        portaudio19-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download config_site.h
