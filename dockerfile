@@ -51,7 +51,7 @@ RUN cd /usr/src/pjsip/pjsip-apps/src/swig/python && \
     make install
 
 RUN mkdir /tmp/site-packages && \
-    cp -r $HOME/.local/lib/python3/site-packages /tmp/site-packages
+    cp -r /root/.local/lib/python3/site-packages /tmp/site-packages
 
 # ------------------------------------------------------------
 # Stage 2: Runtime + sip2mqtt
@@ -81,7 +81,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install paho-mqtt
-RUN mkdir $HOME/.local/lib/python3/site-packages
+RUN mkdir /root/.local/lib/python3/site-packages
 
 # Copy PJSIP libs from build stage
 COPY --from=build /usr/lib/libpj* /usr/lib/
@@ -90,7 +90,7 @@ COPY --from=build /usr/lib/libpjsip* /usr/lib/
 COPY --from=build /usr/lib/libpjmedia* /usr/lib/
 COPY --from=build /usr/lib/libpjlib* /usr/lib/
 COPY --from=build /usr/bin/pjsua* /usr/bin/
-COPY --from=build /tmp/site-packages/ $HOME/.local/lib/python3/site-packages/
+COPY --from=build /tmp/site-packages/ /root/.local/lib/python3/site-packages/
 
 # Download sip2mqtt.py exactly like your original Dockerfile
 RUN mkdir -p /opt/sip2mqtt
