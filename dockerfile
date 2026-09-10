@@ -30,7 +30,7 @@ RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_si
 # Build PJSIP (bez Python bindingov)
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
-    curl -L -o pjproject.tar.gz https://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.gz && \
+    curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
     tar -xzf pjproject.tar.gz --strip-components 1 && \
     mv /tmp/config_site.h pjlib/include/pj/ && \
     ./configure --enable-shared \
