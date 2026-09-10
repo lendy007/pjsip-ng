@@ -7,6 +7,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PJSIP_VERSION=2.12
 ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
+ARG CACHEBUSTER=1
+
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
         build-essential \
