@@ -72,6 +72,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install paho-mqtt
+RUN pip3 install pjsua2
 
 # Copy PJSIP libs from build stage
 COPY --from=build /usr/lib/libpj* /usr/lib/
