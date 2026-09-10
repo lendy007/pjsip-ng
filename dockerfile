@@ -65,7 +65,8 @@ RUN apt-get update -qq && \
         libspeexdsp1 \
         libsrtp2-1 \
         libssl3 \
-        portaudio19-dev && \
+        portaudio19-dev \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install paho-mqtt
