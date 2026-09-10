@@ -4,7 +4,7 @@
 FROM ubuntu:22.04 AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PJSIP_VERSION=2.7.2
+ENV PJSIP_VERSION=2.13
 ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
 RUN apt-get update -qq && \
@@ -35,8 +35,8 @@ RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_si
 # Build PJSIP
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
-    curl -vsL http://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.bz2 | \
-         tar --strip-components 1 -xj && \
+    curl -vsL https://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.gz | \
+         tar --strip-components 1 -xz && \
     mv /tmp/config_site.h pjlib/include/pj/ && \
     ./configure --enable-shared \
                 --disable-opencore-amr \
@@ -50,7 +50,7 @@ RUN mkdir /usr/src/pjsip && \
                 --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig && \
-    cd /usr/src/pjsip/pjsip-apps/src/python && \
+    cd pjsip-apps/src/python && \
     python3 setup.py build && python3 setup.py install
 
 # Download sip2mqtt
@@ -96,7 +96,7 @@ ENV SIP_DOMAIN=sipgate.de
 ENV SIP_USERNAME=sipuser
 ENV SIP_PASSWORD=sippassword
 
-# Use ENV variables in CMD (this is what you wanted)
+# Use ENV variables in CMD
 CMD python3 /opt/sip2mqtt/sip2mqtt.py \
     --mqtt_topic "$MQTT_TOPIC" \
     --mqtt_domain "$MQTT_DOMAIN" \
