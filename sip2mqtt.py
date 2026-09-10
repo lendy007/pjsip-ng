@@ -7,7 +7,7 @@ import time
 import re
 import argparse
 import json
-import pjsua as pj
+import pjsua2 as pj
 import paho.mqtt.client as mqtt
 
 global args
