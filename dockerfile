@@ -25,7 +25,8 @@ RUN apt-get update -qq && \
     apt-get purge -y --auto-remove && rm -rf /var/lib/apt/lists/*
 RUN pip install paho-mqtt
 
-COPY config_site.h /tmp/
+RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_site.h -o /tmp/config_site.h
+#COPY config_site.h /tmp/
 ENV PJSIP_VERSION=2.7.2
 ENV  CFLAGS="-O2 -DNDEBUG"
 ENV  CFLAGS="$CFLAGS -fPIC"
@@ -53,7 +54,7 @@ RUN mkdir /usr/src/pjsip && \
     python setup.py build && python setup.py install
 
 RUN mkdir /opt/sip2mqtt/
-RUN curl -L https://raw.githubusercontent.com/MartyTremblay/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
+RUN curl -L https://raw.githubusercontent.com/lendy007/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
 
 RUN cd /usr/src/pjsip/pjsip-apps/src/python && \
     python setup.py build && python setup.py install
