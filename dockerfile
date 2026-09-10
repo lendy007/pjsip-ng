@@ -18,6 +18,7 @@ RUN apt-get update -qq && \
         libsrtp2-dev \
         libssl-dev \
         portaudio19-dev && \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Download config_site.h
