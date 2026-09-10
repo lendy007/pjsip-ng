@@ -50,7 +50,7 @@ RUN cd /usr/src/pjsip/pjsip-apps/src/swig/python && \
     make && \
     make install
 
-RUN mkdir /tmp/site-packages && \
+RUN mkdir -p /tmp/site-packages && \
     cp -r /root/.local/lib/python3/site-packages /tmp/site-packages
 
 # ------------------------------------------------------------
@@ -81,7 +81,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install paho-mqtt
-RUN mkdir /root/.local/lib/python3/site-packages
+RUN mkdir -p /root/.local/lib/python3/site-packages
 
 # Copy PJSIP libs from build stage
 COPY --from=build /usr/lib/libpj* /usr/lib/
