@@ -17,7 +17,7 @@ RUN apt-get update -qq && \
         libspeexdsp-dev \
         libsrtp2-dev \
         libssl-dev \
-        portaudio19-dev && \
+        portaudio19-dev \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
