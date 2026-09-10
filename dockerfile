@@ -35,8 +35,8 @@ RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_si
 # Build PJSIP
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
-    curl -vsL https://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.gz | \
-         tar --strip-components 1 -xz && \
+    curl -L -o pjproject.tar.gz https://www.pjsip.org/release/${PJSIP_VERSION}/pjproject-${PJSIP_VERSION}.tar.gz && \
+    tar -xzf pjproject.tar.gz --strip-components 1 && \
     mv /tmp/config_site.h pjlib/include/pj/ && \
     ./configure --enable-shared \
                 --disable-opencore-amr \
