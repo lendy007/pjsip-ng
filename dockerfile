@@ -81,7 +81,7 @@ COPY --from=build /usr/bin/pjsua* /usr/bin/
 
 # Download sip2mqtt.py exactly like your original Dockerfile
 RUN mkdir -p /opt/sip2mqtt
-RUN curl -L https://raw.githubusercontent.com/lendy007/sip2mqtt/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
+RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
 
 WORKDIR /opt/sip2mqtt
 
