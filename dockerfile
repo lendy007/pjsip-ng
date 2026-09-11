@@ -84,7 +84,7 @@ RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
         libspeexdsp1 \
         libsrtp2-1 \
         libssl3 \
-        portaudio19 \
+        portaudio19-dev \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
