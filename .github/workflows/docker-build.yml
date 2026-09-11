@@ -29,6 +29,9 @@ jobs:
         with:
           context: .
           file: ./dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/pjsip-ng:latest
-          platforms: linux/amd64
+          push: false
+          load: true
+          tags: test:latest
+          build-args: |
+            BUILDKIT_PROGRESS=plain
+
