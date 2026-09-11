@@ -8,8 +8,7 @@ ENV PJSIP_VERSION=2.12
 ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
 # Enable all Ubuntu repositories
-RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
-    apt-get update -qq && \
+RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
