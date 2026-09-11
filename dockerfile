@@ -27,17 +27,19 @@ RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_si
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
-    tar -xzf pjproject.tar.gz --strip-components 1 && \    
+    tar -xzf pjproject.tar.gz --strip-components 1 && \        
+    rm -rf pjsip-apps && \    
     ./configure --enable-shared \
-            --disable-sound \
-            --disable-video \
-            --disable-resample \
-            --disable-opencore-amr \
-            --disable-ffmpeg \
-            --disable-libyuv \
-            --prefix=/usr && \
+                --disable-sound \
+                --disable-video \
+                --disable-resample \
+                --disable-opencore-amr \
+                --disable-ffmpeg \
+                --disable-libyuv \
+                --prefix=/usr && \    
     make -j$(nproc) all install && \
     ldconfig
+
 
 # toto bolo pred ./configure -> mv /tmp/config_site.h pjlib/include/pj/ && \
 
