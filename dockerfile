@@ -43,10 +43,10 @@ RUN mkdir /usr/src/pjsip && \
                 --disable-resample \
                 --disable-sound \
                 --disable-video \
-                --with-external-gsm \
-                --with-external-pa \
-                --with-external-speex \
-                --with-external-srtp \
+                --disable-gsm-codec \
+                --without-external-pa \
+                --without-external-speex \
+                --without-external-srtp \
                 --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig
