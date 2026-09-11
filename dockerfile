@@ -30,12 +30,19 @@ RUN mkdir /usr/src/pjsip && \
     tar -xzf pjproject.tar.gz --strip-components 1 && \
     mv /tmp/config_site.h pjlib/include/pj/ && \
     ./configure --enable-shared \
-                --disable-sound \
-                --disable-video \
-                --disable-resample \
-                --disable-codec \
-                --disable-pjmedia \
-                --prefix=/usr && \
+            --disable-sound \
+            --disable-video \
+            --disable-opencore-amr \
+            --disable-resample \
+            --disable-ffmpeg \
+            --disable-libyuv \
+            --disable-g711-codec \
+            --disable-g722-codec \
+            --disable-speex-codec \
+            --disable-ilbc-codec \
+            --disable-l16-codec \
+            --disable-gsm-codec \
+            --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig
 
