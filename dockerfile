@@ -9,25 +9,30 @@ ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
 ARG CACHEBUSTER=1
 
-RUN apt-get update -qq && \
+# Enable all Ubuntu repositories (Universe, Multiverse)
+RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
+    apt-get update -qq && \
     apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
         curl \
-        libgsm1-dev \
+        pkg-config \
+        swig \
+        python3-dev \
+        python3-distutils \
+        libssl-dev \
+        libgsm1 \
         libspeex-dev \
         libspeexdsp-dev \
         libsrtp2-dev \
-        libssl-dev \
-        swig \
-        python3-dev \
+        libasound2-dev \
         portaudio19-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download config_site.h
 RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_site.h -o /tmp/config_site.h
 
-# Build PJSIP (using GitHub mirror)
+# Build PJSIP
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
@@ -46,10 +51,12 @@ RUN mkdir /usr/src/pjsip && \
     make -j$(nproc) all install && \
     ldconfig
 
+# Build Python bindings (pjsua2)
 RUN cd /usr/src/pjsip/pjsip-apps/src/swig/python && \
     make && \
     make install
 
+# Copy Python site-packages for runtime stage
 RUN mkdir -p /tmp/site-packages && \
     cp -r /root/.local/lib/python3/site-packages /tmp/site-packages
 
@@ -67,7 +74,8 @@ ENV SIP_DOMAIN=""
 ENV SIP_USERNAME=""
 ENV SIP_PASSWORD=""
 
-RUN apt-get update -qq && \
+RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
+    apt-get update -qq && \
     apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \
@@ -76,7 +84,7 @@ RUN apt-get update -qq && \
         libspeexdsp1 \
         libsrtp2-1 \
         libssl3 \
-        portaudio19-dev \
+        portaudio19 \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
@@ -92,7 +100,7 @@ COPY --from=build /usr/lib/libpjlib* /usr/lib/
 COPY --from=build /usr/bin/pjsua* /usr/bin/
 COPY --from=build /tmp/site-packages/ /root/.local/lib/python3/site-packages/
 
-# Download sip2mqtt.py exactly like your original Dockerfile
+# Download sip2mqtt.py
 RUN mkdir -p /opt/sip2mqtt
 RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/sip2mqtt.py -o /opt/sip2mqtt/sip2mqtt.py
 
