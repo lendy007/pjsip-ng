@@ -27,8 +27,7 @@ RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_si
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
-    tar -xzf pjproject.tar.gz --strip-components 1 && \
-    mv /tmp/config_site.h pjlib/include/pj/ && \
+    tar -xzf pjproject.tar.gz --strip-components 1 && \    
     ./configure --enable-shared \
             --disable-sound \
             --disable-video \
@@ -39,6 +38,8 @@ RUN mkdir /usr/src/pjsip && \
             --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig
+
+# toto bolo pred ./configure -> mv /tmp/config_site.h pjlib/include/pj/ && \
 
 # Build Python bindings (pjsua2)
 RUN cd /usr/src/pjsip/pjsip-apps/src/swig/python && \
