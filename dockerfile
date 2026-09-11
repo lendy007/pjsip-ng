@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# Stage 1: Build PJSIP
+# Stage 1: Build PJSIP (minimal SIP-only build)
 # ------------------------------------------------------------
 FROM ubuntu:22.04 AS build
 
@@ -7,9 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PJSIP_VERSION=2.12
 ENV CFLAGS="-O2 -DNDEBUG -fPIC"
 
-ARG CACHEBUSTER=1
-
-# Enable all Ubuntu repositories (Universe, Multiverse)
+# Enable all Ubuntu repositories
 RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
     apt-get update -qq && \
     apt-get install -y --no-install-recommends \
@@ -17,44 +15,28 @@ RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
         ca-certificates \
         curl \
         pkg-config \
-        swig \
         python3-dev \
         python3-distutils \
-        libssl-dev \
-        libgsm1 \
-        libspeex-dev \
-        libspeexdsp-dev \
-        libsrtp2-dev \
-        libasound2-dev \
-        portaudio19-dev && \
+        swig \
+        libssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download config_site.h
 RUN curl -L https://raw.githubusercontent.com/lendy007/pjsip-ng/master/config_site.h -o /tmp/config_site.h
 
-# Build PJSIP
+# Build PJSIP (SIP-only, no pjmedia)
 RUN mkdir /usr/src/pjsip && \
     cd /usr/src/pjsip && \
     curl -L -o pjproject.tar.gz https://github.com/pjsip/pjproject/archive/refs/tags/${PJSIP_VERSION}.tar.gz && \
     tar -xzf pjproject.tar.gz --strip-components 1 && \
     mv /tmp/config_site.h pjlib/include/pj/ && \
     ./configure --enable-shared \
-            --disable-sound \
-            --disable-video \
-            --disable-resample \
-            --disable-codec \
-            --disable-pjmedia \
-            --prefix=/usr && \
-    #./configure --enable-shared \
-     #           --disable-opencore-amr \
-      #          --disable-resample \
-       #         --disable-sound \
-        #        --disable-video \
-         #       --disable-gsm-codec \
-          #      --without-external-pa \
-           #     --without-external-speex \
-            #    --without-external-srtp \
-             #   --prefix=/usr && \
+                --disable-sound \
+                --disable-video \
+                --disable-resample \
+                --disable-codec \
+                --disable-pjmedia \
+                --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig
 
@@ -63,7 +45,7 @@ RUN cd /usr/src/pjsip/pjsip-apps/src/swig/python && \
     make && \
     make install
 
-# Copy Python site-packages for runtime stage
+# Copy Python site-packages for runtime
 RUN mkdir -p /tmp/site-packages && \
     cp -r /root/.local/lib/python3/site-packages /tmp/site-packages
 
@@ -86,23 +68,17 @@ RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
     apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \
-        libgsm1 \
-        libspeex1 \
-        libspeexdsp1 \
-        libsrtp2-1 \
         libssl3 \
-        portaudio19-dev \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install paho-mqtt
 RUN mkdir -p /root/.local/lib/python3/site-packages
 
-# Copy PJSIP libs from build stage
+# Copy PJSIP libs
 COPY --from=build /usr/lib/libpj* /usr/lib/
 COPY --from=build /usr/lib/libpjsua* /usr/lib/
 COPY --from=build /usr/lib/libpjsip* /usr/lib/
-COPY --from=build /usr/lib/libpjmedia* /usr/lib/
 COPY --from=build /usr/lib/libpjlib* /usr/lib/
 COPY --from=build /usr/bin/pjsua* /usr/bin/
 COPY --from=build /tmp/site-packages/ /root/.local/lib/python3/site-packages/
