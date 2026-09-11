@@ -69,9 +69,12 @@ ENV SIP_PASSWORD=""
 RUN sed -i 's/^# deb/deb/g' /etc/apt/sources.list && \
     apt-get update -qq && \
     apt-get install -y --no-install-recommends \
-        python3 \
-        python3-pip \
+        python3 python3-pip \
         libssl3 \
+        libstdc++6 \
+        libgcc-s1 \
+        libpython3.10 \
+        libcurl4 \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
