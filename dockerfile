@@ -37,7 +37,7 @@ RUN mkdir /usr/src/pjsip && \
                 --disable-ffmpeg \
                 --disable-libyuv \
                 --prefix=/usr && \    
-    make -j$(nproc) all install && \
+    make -j$(nproc) libs install && \
     ldconfig
 
 
