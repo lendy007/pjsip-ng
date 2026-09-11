@@ -32,16 +32,10 @@ RUN mkdir /usr/src/pjsip && \
     ./configure --enable-shared \
             --disable-sound \
             --disable-video \
-            --disable-opencore-amr \
             --disable-resample \
+            --disable-opencore-amr \
             --disable-ffmpeg \
             --disable-libyuv \
-            --disable-g711-codec \
-            --disable-g722-codec \
-            --disable-speex-codec \
-            --disable-ilbc-codec \
-            --disable-l16-codec \
-            --disable-gsm-codec \
             --prefix=/usr && \
     make -j$(nproc) all install && \
     ldconfig
