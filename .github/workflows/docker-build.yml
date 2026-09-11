@@ -27,4 +27,4 @@ jobs:
           load: true
           tags: test:latest
           builder: default
-          outputs: type=local,dst=./out
+          outputs: type=local,dest=./out
